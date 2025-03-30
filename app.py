@@ -5,13 +5,11 @@ import docx
 from PIL import Image
 import pytesseract
 
-# Page config
+# Config
 st.set_page_config(page_title="AI Interview Coach", layout="wide")
-
-# OpenAI setup
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# Custom style
+# Styling
 st.markdown("""
     <style>
     .stApp { background-color: #f9f9f9; font-family: 'Segoe UI', sans-serif; }
@@ -19,12 +17,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Sidebar instructions
+# Sidebar
 with st.sidebar:
     st.title("🛠️ How to Use")
     st.markdown("""
-    1. Upload your **Resume**  
-    2. Upload the **Job Description**  
+    1. Upload or paste your **Resume**  
+    2. Upload or paste the **Job Description**  
     3. Type an **Interview Question**  
     4. Click **Generate**
     """)
@@ -36,73 +34,79 @@ st.markdown("<h1>🌟 AI Interview Coach</h1>", unsafe_allow_html=True)
 st.markdown("Practice interview questions using your resume and a job description. Get instant feedback powered by GPT-4.")
 st.markdown("---")
 
-# Function to extract text from supported file types
+# Extract text function
 def extract_text(file):
-    file_name = file.name.lower()
-    if file_name.endswith(".pdf"):
+    name = file.name.lower()
+    if name.endswith(".pdf"):
         pdf = fitz.open(stream=file.read(), filetype="pdf")
         return "\n".join([page.get_text() for page in pdf])
-    elif file_name.endswith(".docx"):
+    elif name.endswith(".docx"):
         doc = docx.Document(file)
-        return "\n".join([para.text for para in doc.paragraphs])
-    elif file_name.endswith(".txt"):
+        return "\n".join([p.text for p in doc.paragraphs])
+    elif name.endswith(".txt"):
         return file.read().decode("utf-8", errors="ignore")
-    elif file_name.endswith((".jpg", ".jpeg", ".png")):
+    elif name.endswith((".jpg", ".jpeg", ".png")):
         image = Image.open(file)
         return pytesseract.image_to_string(image)
     return None
 
-# Upload fields
-col1, col2 = st.columns(2)
-with col1:
-    resume_file = st.file_uploader("📄 Upload Resume", type=["pdf", "docx", "txt", "jpg", "jpeg", "png"])
-with col2:
-    job_file = st.file_uploader("📋 Upload Job Description", type=["pdf", "docx", "txt", "jpg", "jpeg", "png"])
+# Input: Resume
+st.markdown("### 📄 Resume")
+resume_col1, resume_col2 = st.columns([1, 1])
+with resume_col1:
+    resume_file = st.file_uploader("Upload Resume", type=["pdf", "docx", "txt", "jpg", "jpeg", "png"])
+with resume_col2:
+    resume_text = st.text_area("Or paste your resume here", height=200)
 
-# Question input
+# Input: Job Description
+st.markdown("### 📋 Job Description")
+job_col1, job_col2 = st.columns([1, 1])
+with job_col1:
+    job_file = st.file_uploader("Upload Job Description", type=["pdf", "docx", "txt", "jpg", "jpeg", "png"], key="job")
+with job_col2:
+    job_text = st.text_area("Or paste the job description here", height=200)
+
+# Interview question
 question = st.text_input("🖊️ Enter an interview question (e.g. 'Why should we hire you?')")
 
-# Generate response
+# Button
 if st.button("✨ Generate Response"):
-    if not resume_file or not job_file or not question:
-        st.warning("🚫 Please upload both documents and enter a question.")
-    else:
-        with st.spinner("Extracting file contents..."):
-            resume = extract_text(resume_file)
-            job_desc = extract_text(job_file)
+    resume_final = extract_text(resume_file) if resume_file else resume_text
+    job_final = extract_text(job_file) if job_file else job_text
 
-        if not resume or not job_desc:
-            st.error("⚠️ Could not extract text from one or both files.")
-        else:
-            prompt = f"""
+    if not resume_final or not job_final or not question:
+        st.warning("🚫 Please provide resume, job description, and a question (via file or text).")
+    else:
+        prompt = f"""
 You are an AI interview coach.
 
-Here is the candidate's resume:
-{resume}
+Resume:
+{resume_final}
 
-Here is the job description:
-{job_desc}
+Job Description:
+{job_final}
 
-Interview question:
+Interview Question:
 {question}
 
-Evaluate how well the resume and question align with the job, then suggest a professional and improved answer. Keep tone confident and concise.
+Evaluate how well the resume and question align with the job, and suggest a professional, improved answer.
 """
-            try:
-                with st.spinner("Thinking like a recruiter... 🤖"):
-                    response = client.chat.completions.create(
-                        model="gpt-4",
-                        messages=[
-                            {"role": "system", "content": "You are an expert interview coach."},
-                            {"role": "user", "content": prompt}
-                        ]
-                    )
-                    st.success("✅ Response generated!")
-                    st.subheader("🎯 Suggested Answer")
-                    st.write(response.choices[0].message.content.strip())
 
-            except Exception as e:
-                st.error(f"⚠️ Unexpected Error: {str(e)}")
+        try:
+            with st.spinner("Generating response... 🤖"):
+                response = client.chat.completions.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": "You are an expert interview coach."},
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                st.success("✅ Response generated!")
+                st.subheader("🎯 Suggested Answer")
+                st.write(response.choices[0].message.content.strip())
+
+        except Exception as e:
+            st.error(f"⚠️ Unexpected Error: {str(e)}")
 
 # Footer
 st.markdown("<hr><p style='text-align: center; color: grey;'>© 2025 AI Interview Coach | Powered by OpenAI GPT-4 & Streamlit</p>", unsafe_allow_html=True)
