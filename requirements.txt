@@ -1,2 +1,6 @@
-openai>=1.0.0
 streamlit
+openai
+python-docx
+PyMuPDF
+pytesseract
+pillow
