@@ -27,7 +27,7 @@ with st.sidebar:
     4. Click **Generate**
     """)
     st.markdown("---")
-    st.markdown("Built with ❤️ using GPT-4 + Streamlit")
+    st.markdown("Built using GPT-4 + Streamlit")
 
 # Title
 st.markdown("<h1>🌟 AI Interview Coach</h1>", unsafe_allow_html=True)
