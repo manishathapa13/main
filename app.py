@@ -48,4 +48,4 @@ Interview Question:
                 )
 
                 answer = response.choices[0].message.content
-                st.subheader("🎯 Suggested Answer
+                st.subheader("🎯 Suggested Answer")
