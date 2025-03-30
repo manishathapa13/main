@@ -8,7 +8,7 @@ st.title("🧠 AI Interview Coach")
 st.write("Practice interview questions using your resume and a job description. Get instant feedback powered by GPT-3.5.")
 
 # 🚫 Don't expose your key publicly
-openai.api_key = "sk-REPLACE_WITH_YOURS"
+openai.api_key = "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"
 
 # 📝 Input fields
 resume = st.text_area("📄 Paste your resume", height=200)
