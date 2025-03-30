@@ -112,4 +112,47 @@ Job Description:
 {job_desc}
 """
         try:
-            response_qs =_
+            response_qs = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an expert HR interview coach."},
+                    {"role": "user", "content": prompt_qs}
+                ]
+            )
+            st.subheader("🧠 General Interview Questions")
+            st.write(response_qs.choices[0].message.content.strip())
+        except Exception as e:
+            st.error(f"⚠️ Error generating questions: {str(e)}")
+
+# === Generate Answer ===
+if st.button("✨ Generate Response"):
+    if not (resume and job_desc and question):
+        st.warning("Please fill in all fields.")
+    else:
+        prompt = f"""
+You are an AI interview coach.
+
+Here is the candidate's resume:
+{resume}
+
+Here is the job description:
+{job_desc}
+
+Interview question:
+{question}
+
+Evaluate how well the resume and answer align with the job description, and give actionable feedback. Then suggest an improved answer.
+"""
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an expert interview coach."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            st.subheader("🎯 Suggested Answer")
+            st.write(response.choices[0].message.content.strip())
+
+        except Exception as e:
+            st.error(f"⚠️ Unexpected Error: {str(e)}")
