@@ -1,44 +1,49 @@
 import streamlit as st
 import openai
 
-client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# Set OpenAI API key securely
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-st.title("AI Interview Coach")
+# Title
+st.title("🧠 AI Interview Coach")
 st.write("Practice interview questions using your resume and a job description. Get instant feedback powered by GPT-4.")
 
-# Input fields
-resume = st.text_area("📄 Paste your resume", height=200)
-job_desc = st.text_area("📄 Paste the job description", height=200)
-question = st.text_input("🎤 Enter an interview question (e.g. 'Tell me about yourself')")
+# Upload Resume
+resume_file = st.file_uploader("📄 Upload your resume", type=["pdf", "docx", "txt"])
+resume = ""
+if resume_file is not None:
+    resume = resume_file.read().decode("utf-8", errors="ignore")
 
+# Upload Job Description
+job_file = st.file_uploader("📋 Upload the job description", type=["pdf", "docx", "txt"])
+job_desc = ""
+if job_file is not None:
+    job_desc = job_file.read().decode("utf-8", errors="ignore")
+
+# Question input
+question = st.text_input("🖊️ Enter an interview question (e.g. 'Tell me about yourself')")
+
+# Button
 if st.button("✨ Generate Response"):
-    if not (resume and job_desc and question):
-        st.warning("Please fill in all fields.")
+    if not resume or not job_desc or not question:
+        st.warning("Please upload both files and enter a question.")
     else:
-        prompt = f"""
-You are an AI interview coach.
-
-Here is the candidate's resume:
-{resume}
-
-Here is the job description:
-{job_desc}
-
-Interview question:
-{question}
-
-Evaluate how well the resume and answer align with the job description, and give actionable feedback. Then suggest an improved answer.
-"""
         try:
-            response = client.chat.completions.create(
+            prompt = f"""
+            You are an AI interview coach.
+            Candidate's Resume: {resume}
+            Job Description: {job_desc}
+            Interview Question: {question}
+            Provide an ideal answer and briefly explain why it's strong.
+            """
+            response = openai.ChatCompletion.create(
                 model="gpt-4",
-                messages=[
-                    {"role": "system", "content": "You are an expert interview coach."},
-                    {"role": "user", "content": prompt}
-                ]
+                messages=[{"role": "user", "content": prompt}]
             )
             st.subheader("🎯 Suggested Answer")
             st.write(response.choices[0].message.content.strip())
 
+        except openai.OpenAIError as e:
+            st.error(f"❗ OpenAI Error: {str(e)}")
         except Exception as e:
             st.error(f"⚠️ Unexpected Error: {str(e)}")
