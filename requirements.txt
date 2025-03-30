@@ -4,3 +4,4 @@ python-docx
 PyMuPDF
 pytesseract
 pillow
+streamlit_speech_recognition
