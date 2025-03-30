@@ -1,112 +1,120 @@
 import streamlit as st
 import openai
-import fitz  # PyMuPDF
-import docx
+import os
+from docx import Document
+from PyPDF2 import PdfReader
 from PIL import Image
-import pytesseract
+import io
 
-# Config
-st.set_page_config(page_title="AI Interview Coach", layout="wide")
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# Styling
+st.set_page_config(page_title="AI Interview Coach", layout="wide")
+
 st.markdown("""
     <style>
-    .stApp { background-color: #f9f9f9; font-family: 'Segoe UI', sans-serif; }
-    h1 { text-align: center; color: #4CAF50; }
+    .block-container {
+        padding: 2rem 3rem;
+    }
+    .section-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-top: 2rem;
+    }
+    textarea {
+        font-family: monospace;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Sidebar
+st.title("🤖 AI Interview Coach")
+
 with st.sidebar:
-    st.title("🛠️ How to Use")
-    st.markdown("""
-    1. Upload or paste your **Resume**  
-    2. Upload or paste the **Job Description**  
-    3. Type an **Interview Question**  
-    4. Click **Generate**
-    """)
+    st.markdown("### 🛠️ How to Use")
+    st.markdown("1. Upload or paste your **Resume**")
+    st.markdown("2. Upload or paste the **Job Description**")
+    st.markdown("3. Type an **Interview Question**")
+    st.markdown("4. Click **Generate**")
     st.markdown("---")
     st.markdown("Built with ❤️ using GPT-4 + Streamlit")
 
-# Title
-st.markdown("<h1>🌟 AI Interview Coach</h1>", unsafe_allow_html=True)
-st.markdown("Practice interview questions using your resume and a job description. Get instant feedback powered by GPT-4.")
-st.markdown("---")
+# ---------- File parsing function ----------
+def extract_text_from_file(uploaded_file):
+    filetype = uploaded_file.type
 
-# Extract text function
-def extract_text(file):
-    name = file.name.lower()
-    if name.endswith(".pdf"):
-        pdf = fitz.open(stream=file.read(), filetype="pdf")
-        return "\n".join([page.get_text() for page in pdf])
-    elif name.endswith(".docx"):
-        doc = docx.Document(file)
-        return "\n".join([p.text for p in doc.paragraphs])
-    elif name.endswith(".txt"):
-        return file.read().decode("utf-8", errors="ignore")
-    elif name.endswith((".jpg", ".jpeg", ".png")):
-        image = Image.open(file)
-        return pytesseract.image_to_string(image)
-    return None
+    if filetype == "application/pdf":
+        reader = PdfReader(uploaded_file)
+        text = "".join([page.extract_text() for page in reader.pages if page.extract_text()])
+        return text
 
-# Input: Resume
-st.markdown("### 📄 Resume")
-resume_col1, resume_col2 = st.columns([1, 1])
-with resume_col1:
+    elif filetype == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        doc = Document(uploaded_file)
+        return "\n".join([para.text for para in doc.paragraphs])
+
+    elif "text" in filetype:
+        return uploaded_file.read().decode("utf-8")
+
+    elif "image" in filetype:
+        return "[Image uploaded – content not readable as text]"
+
+    else:
+        return "[Unsupported file type]"
+
+# ---------- Resume Section ----------
+st.markdown("### 📄 Resume", unsafe_allow_html=True)
+col1, col2 = st.columns(2)
+
+with col1:
     resume_file = st.file_uploader("Upload Resume", type=["pdf", "docx", "txt", "jpg", "jpeg", "png"])
-with resume_col2:
+with col2:
     resume_text = st.text_area("Or paste your resume here", height=200)
 
-# Input: Job Description
-st.markdown("### 📋 Job Description")
-job_col1, job_col2 = st.columns([1, 1])
-with job_col1:
-    job_file = st.file_uploader("Upload Job Description", type=["pdf", "docx", "txt", "jpg", "jpeg", "png"], key="job")
-with job_col2:
+if resume_file:
+    resume_text = extract_text_from_file(resume_file)
+
+# ---------- Job Description Section ----------
+st.markdown("### 📝 Job Description", unsafe_allow_html=True)
+col3, col4 = st.columns(2)
+
+with col3:
+    job_file = st.file_uploader("Upload Job Description", type=["pdf", "docx", "txt", "jpg", "jpeg", "png"])
+with col4:
     job_text = st.text_area("Or paste the job description here", height=200)
 
-# Interview question
-question = st.text_input("🖊️ Enter an interview question (e.g. 'Why should we hire you?')")
+if job_file:
+    job_text = extract_text_from_file(job_file)
 
-# Button
+# ---------- Interview Question ----------
+st.markdown("### ❓ Interview Question")
+question = st.text_input("Type your question (e.g. 'Tell me about yourself')")
+
+# ---------- Generate Button ----------
 if st.button("✨ Generate Response"):
-    resume_final = extract_text(resume_file) if resume_file else resume_text
-    job_final = extract_text(job_file) if job_file else job_text
-
-    if not resume_final or not job_final or not question:
-        st.warning("🚫 Please provide resume, job description, and a question (via file or text).")
+    if not (resume_text and job_text and question):
+        st.warning("⚠️ Please provide both resume, job description, and a question.")
     else:
         prompt = f"""
 You are an AI interview coach.
 
-Resume:
-{resume_final}
+Here is the candidate's resume:
+{resume_text}
 
-Job Description:
-{job_final}
+Here is the job description:
+{job_text}
 
-Interview Question:
+Interview question:
 {question}
 
-Evaluate how well the resume and question align with the job, and suggest a professional, improved answer.
+Evaluate how well the resume and answer align with the job description, and give actionable feedback. Then suggest an improved answer.
 """
-
         try:
-            with st.spinner("Generating response... 🤖"):
-                response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": "You are an expert interview coach."},
-                        {"role": "user", "content": prompt}
-                    ]
-                )
-                st.success("✅ Response generated!")
-                st.subheader("🎯 Suggested Answer")
-                st.write(response.choices[0].message.content.strip())
-
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an expert interview coach."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            st.subheader("🎯 Suggested Answer")
+            st.write(response.choices[0].message.content.strip())
         except Exception as e:
             st.error(f"⚠️ Unexpected Error: {str(e)}")
-
-# Footer
-st.markdown("<hr><p style='text-align: center; color: grey;'>© 2025 AI Interview Coach | Powered by OpenAI GPT-4 & Streamlit</p>", unsafe_allow_html=True)
