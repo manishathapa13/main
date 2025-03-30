@@ -4,7 +4,7 @@ import fitz  # PyMuPDF
 import docx
 from PIL import Image
 import pytesseract
-import io
+from streamlit_speech_recognition import speech_to_text
 
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
@@ -23,9 +23,9 @@ st.markdown("**Practice interview questions using your resume and job descriptio
 # Sidebar Instructions
 with st.sidebar:
     st.header("🛠️ How to Use")
-    st.markdown("1. Upload or paste your **Resume**")
-    st.markdown("2. Upload or paste the **Job Description**")
-    st.markdown("3. Type an **Interview Question**")
+    st.markdown("1. Upload, paste, or speak your **Resume**")
+    st.markdown("2. Upload, paste, or speak the **Job Description**")
+    st.markdown("3. Type or speak an **Interview Question**")
     st.markdown("4. Click **Generate**")
     st.markdown("\nBuilt with ❤️ using GPT-4 + Streamlit")
 
@@ -65,6 +65,11 @@ with col1:
 with col2:
     resume_text = st.text_area("Or paste your resume here", height=200)
 
+st.markdown("🎙️ Or speak your resume")
+resume_voice = speech_to_text()
+if resume_voice:
+    resume_text += "\n" + resume_voice
+
 resume = resume_text or handle_file_upload(resume_file)
 
 # === Job Description Section ===
@@ -75,12 +80,51 @@ with col3:
 with col4:
     jd_text = st.text_area("Or paste the job description here", height=200)
 
+st.markdown("🎙️ Or speak the job description")
+jd_voice = speech_to_text()
+if jd_voice:
+    jd_text += "\n" + jd_voice
+
 job_desc = jd_text or handle_file_upload(jd_file)
 
 # === Interview Question ===
-question = st.text_input("🎤 Enter an interview question (e.g. 'Tell me about yourself')")
+st.subheader("❓ Interview Question")
+question = st.text_input("Type your question (e.g. 'Tell me about yourself')")
 
-# === Generate Button ===
+st.markdown("🎙️ Or speak your question")
+question_voice = speech_to_text()
+if question_voice:
+    question += " " + question_voice
+
+# === Generate Interview Questions ===
+if st.button("💡 Generate Interview Questions"):
+    if not (resume and job_desc):
+        st.warning("Please provide both resume and job description.")
+    else:
+        prompt_qs = f"""
+You are an expert HR specialist. Based on the following resume and job description,
+generate a list of 5 relevant behavioral or technical interview questions.
+
+Resume:
+{resume}
+
+Job Description:
+{job_desc}
+"""
+        try:
+            response_qs = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an expert HR interview coach."},
+                    {"role": "user", "content": prompt_qs}
+                ]
+            )
+            st.subheader("🧠 General Interview Questions")
+            st.write(response_qs.choices[0].message.content.strip())
+        except Exception as e:
+            st.error(f"⚠️ Error generating questions: {str(e)}")
+
+# === Generate Answer ===
 if st.button("✨ Generate Response"):
     if not (resume and job_desc and question):
         st.warning("Please fill in all fields.")
