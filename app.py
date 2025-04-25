@@ -111,28 +111,27 @@ Evaluate how well the resume and question align with the job, and suggest a prof
         except Exception as e:
             st.error(f"⚠️ Unexpected Error: {str(e)}")
 
-# Show common interview questions after generating a response
-if show_common_questions:
-    st.markdown("### 💬 Get Common Interview Questions")
-    if st.button("📋 Show Common Interview Questions"):
-        common_q_prompt = """
+# Always Show common interview questions
+st.markdown("### 💬 Get Common Interview Questions")
+if st.button("📋 Show Common Interview Questions"):
+    common_q_prompt = """
 You are an expert career advisor. Provide a list of the top 10 most commonly asked job interview questions that apply to most industries and positions.
 Please format your response clearly.
 """
-        try:
-            with st.spinner("Fetching top interview questions..."):
-                response_common = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": "You are an expert HR advisor."},
-                        {"role": "user", "content": common_q_prompt}
-                    ]
-                )
-                st.success("✅ Here are some popular questions!")
-                st.subheader("🔝 Top Interview Questions")
-                st.write(response_common.choices[0].message.content.strip())
-        except Exception as e:
-            st.error(f"⚠️ Error fetching common questions: {str(e)}")
+    try:
+        with st.spinner("Fetching top interview questions..."):
+            response_common = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an expert HR advisor."},
+                    {"role": "user", "content": common_q_prompt}
+                ]
+            )
+            st.success("✅ Here are some popular questions!")
+            st.subheader("🔝 Top Interview Questions")
+            st.write(response_common.choices[0].message.content.strip())
+    except Exception as e:
+        st.error(f"⚠️ Error fetching common questions: {str(e)}")
 
 # Footer
 st.markdown("<hr><p style='text-align: center; color: grey;'>© 2025 AI Interview Coach | Powered by OpenAI GPT-4 & Streamlit</p>", unsafe_allow_html=True)
