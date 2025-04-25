@@ -4,3 +4,7 @@ python-docx
 PyMuPDF
 pytesseract
 pillow
+streamlit-webrtc
+openai-whisper
+av
+torch
