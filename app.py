@@ -4,12 +4,6 @@ import fitz  # PyMuPDF
 import docx
 from PIL import Image
 import pytesseract
-from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, ClientSettings
-import whisper
-import numpy as np
-import av
-import tempfile
-import os
 
 # Config
 st.set_page_config(page_title="AI Interview Coach", layout="wide")
@@ -23,66 +17,17 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Whisper Model
-@st.cache_resource
-def load_model():
-    return whisper.load_model("base")
-
-whisper_model = load_model()
-
-class AudioProcessor(AudioProcessorBase):
-    def __init__(self):
-        self.recorded_frames = []
-
-    def recv(self, frame: av.AudioFrame) -> av.AudioFrame:
-        pcm = frame.to_ndarray().flatten().astype(np.float32)
-        self.recorded_frames.append(pcm)
-        return frame
-
-    def get_audio_data(self):
-        return np.concatenate(self.recorded_frames) if self.recorded_frames else None
-
 # Sidebar
 with st.sidebar:
     st.title("🛠️ How to Use")
     st.markdown("""
     1. Upload or paste your **Resume**  
     2. Upload or paste the **Job Description**  
-    3. Type or record an **Interview Question**  
+    3. Type an **Interview Question**  
     4. Click **Generate**
     """)
     st.markdown("---")
     st.markdown("Built using GPT-4 + Streamlit")
-
-    st.markdown("### 🎤 Record Your Question")
-    ap = AudioProcessor()
-    webrtc_ctx = webrtc_streamer(
-        key="speech-input",
-        mode="SENDRECV",
-        client_settings=ClientSettings(
-            media_stream_constraints={"audio": True, "video": False},
-            rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-        ),
-        audio_processor_factory=lambda: ap,
-        async_processing=True,
-    )
-
-    voice_transcript = ""
-    if st.button("🗣️ Transcribe Audio"):
-        if webrtc_ctx.state.playing:
-            st.warning("Please stop recording before transcribing.")
-        else:
-            audio_data = ap.get_audio_data()
-            if audio_data is not None:
-                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-                    whisper.audio.save_audio(f.name, audio_data, sample_rate=16000)
-                    result = whisper_model.transcribe(f.name)
-                    voice_transcript = result["text"]
-                    st.success("Transcription Complete!")
-                    st.write(f"**Transcribed Text:** {voice_transcript}")
-                os.remove(f.name)
-            else:
-                st.warning("No audio detected.")
 
 # Title
 st.markdown("<h1>🌟 AI Interview Coach</h1>", unsafe_allow_html=True)
@@ -122,7 +67,7 @@ with job_col2:
     job_text = st.text_area("Or paste the job description here", height=200)
 
 # Interview question
-question = st.text_input("🖊️ Enter an interview question (e.g. 'Why should we hire you?')", value=voice_transcript or "")
+question = st.text_input("🖊️ Enter an interview question (e.g. 'Why should we hire you?')")
 
 show_common_questions = False
 
