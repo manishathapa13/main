@@ -4,7 +4,7 @@ python-docx
 PyMuPDF
 pytesseract
 pillow
-streamlit-webrtc
+streamlit-webrtc>=0.45.0
 openai-whisper
 av
 torch
