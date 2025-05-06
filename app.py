@@ -71,6 +71,10 @@ def extract_text(file):
         return pytesseract.image_to_string(image)
     return None
 
+# Initialize chat history
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
 # Input: Resume
 st.markdown("### 📄 Resume")
 resume_col1, resume_col2 = st.columns([1, 1])
@@ -89,8 +93,6 @@ with job_col2:
 
 # Interview question
 question = st.text_input("🖊️ Enter an interview question (e.g. 'Why should we hire you?')")
-
-show_common_questions = False
 
 # Button
 if st.button("✨ Generate Response"):
@@ -124,13 +126,42 @@ Evaluate how well the resume and question align with the job, and suggest a prof
                         {"role": "user", "content": prompt}
                     ]
                 )
+                ai_reply = response.choices[0].message.content.strip()
+
+                # Append to chat history
+                st.session_state.chat_history.append(("You", question))
+                st.session_state.chat_history.append(("AI", ai_reply))
+
                 st.success("✅ Response generated!")
-                st.subheader("🎯 Suggested Answer")
-                st.write(response.choices[0].message.content.strip())
-                show_common_questions = True
+                st.subheader("🌟 Suggested Answer")
+                st.write(ai_reply)
 
         except Exception as e:
             st.error(f"⚠️ Unexpected Error: {str(e)}")
+
+# Show chat history
+if st.session_state.chat_history:
+    st.subheader("🗂️ Conversation History")
+    for speaker, message in st.session_state.chat_history:
+        st.markdown(f"**{speaker}:** {message}")
+
+    # Download chat history
+    def generate_chat_download():
+        lines = [f"{speaker}: {message}" for speaker, message in st.session_state.chat_history]
+        return "\n\n".join(lines)
+
+    chat_text = generate_chat_download()
+    st.download_button(
+        label="📅 Download Chat History",
+        data=chat_text,
+        file_name="interview_chat_history.txt",
+        mime="text/plain"
+    )
+
+    # Clear button
+    if st.button("🗑️ Clear Chat"):
+        st.session_state.chat_history = []
+        st.experimental_rerun()
 
 # Footer
 st.markdown("<hr><p style='text-align: center; color: grey;'>© 2025 AI Interview Coach | Powered by OpenAI GPT-4 API + Streamlit</p>", unsafe_allow_html=True)
