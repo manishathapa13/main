@@ -137,9 +137,9 @@ Job Description:
                 ]
             )
             st.session_state.suggested_questions = suggestion_response.choices[0].message.content.strip()
-            st.success("✅ Suggested questions ready!")
-st.markdown("### 💡 Suggested Interview Questions")
-st.markdown(st.session_state.suggested_questions)
+    st.success("✅ Suggested questions ready!")
+    st.markdown("### 💡 Suggested Interview Questions")
+    st.markdown(st.session_state.suggested_questions)
         except Exception as e:
             st.warning(f"⚠️ Could not fetch suggested questions: {str(e)}")
 
