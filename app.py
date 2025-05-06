@@ -107,13 +107,15 @@ with job_col2:
     job_text = st.text_area("Or paste the job description here", height=200)
 
 # Interview question with highlight style
-st.markdown('<div class="highlight-input">', unsafe_allow_html=True)
-question = st.text_input("🖊️ Enter an interview question (e.g. 'Why should we hire you?')")
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown("""
+    <div style='background-color:#fff8dc;padding:15px;border-radius:10px;border:2px solid #f1c40f;box-shadow: 0 0 10px rgba(241,196,15,0.5);'>
+        <strong>🖊️ Enter an interview question (e.g. 'Why should we hire you?')</strong>
+    </div>
+""", unsafe_allow_html=True)
+question = st.text_input("", key="interview_q")
 
 # Button with highlight style
-st.markdown('<div class="highlight-button">', unsafe_allow_html=True)
-if st.button("✨ Generate Response"):
+if st.button("✨ Generate Response", help="Click to generate AI-powered feedback"):
     resume_final = extract_text(resume_file) if resume_file else resume_text
     job_final = extract_text(job_file) if job_file else job_text
 
@@ -155,7 +157,7 @@ Evaluate how well the resume and question align with the job, and suggest a prof
 
         except Exception as e:
             st.error(f"⚠️ Unexpected Error: {str(e)}")
-st.markdown('</div>', unsafe_allow_html=True)
+
 
 # Show chat history
 if st.session_state.chat_history:
