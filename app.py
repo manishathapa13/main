@@ -133,7 +133,12 @@ st.markdown("""
 question = st.text_area("", height=100, placeholder="Type your interview question here...", key="interview_q")
 
 # Button with highlight style
-if st.button("✨ Generate Response", help="Click to generate AI-powered feedback"):
+is_ready = resume_final and job_final and question
+
+if not is_ready:
+    st.warning("🚫 Please provide resume, job description, and a question.")
+
+if st.button("✨ Generate Response", help="Click to generate AI-powered feedback", disabled=not is_ready):
     resume_final = extract_text(resume_file) if resume_file else resume_text
     job_final = extract_text(job_file) if job_file else job_text
 
