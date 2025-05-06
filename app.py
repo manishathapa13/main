@@ -14,6 +14,21 @@ st.markdown("""
     <style>
     .stApp { background-color: #f9f9f9; font-family: 'Segoe UI', sans-serif; }
     h1 { text-align: center; color: #4CAF50; }
+    .highlight-input input {
+        background-color: #fffbea !important;
+        border: 2px solid #f1c40f !important;
+        box-shadow: 0 0 10px rgba(241, 196, 15, 0.6) !important;
+    }
+    .highlight-button button {
+        background-color: #f39c12 !important;
+        color: white !important;
+        font-weight: bold;
+        box-shadow: 0 0 10px rgba(243, 156, 18, 0.6);
+        transition: 0.3s ease;
+    }
+    .highlight-button button:hover {
+        background-color: #e67e22 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -91,10 +106,13 @@ with job_col1:
 with job_col2:
     job_text = st.text_area("Or paste the job description here", height=200)
 
-# Interview question
+# Interview question with highlight style
+st.markdown('<div class="highlight-input">', unsafe_allow_html=True)
 question = st.text_input("🖊️ Enter an interview question (e.g. 'Why should we hire you?')")
+st.markdown('</div>', unsafe_allow_html=True)
 
-# Button
+# Button with highlight style
+st.markdown('<div class="highlight-button">', unsafe_allow_html=True)
 if st.button("✨ Generate Response"):
     resume_final = extract_text(resume_file) if resume_file else resume_text
     job_final = extract_text(job_file) if job_file else job_text
@@ -128,7 +146,6 @@ Evaluate how well the resume and question align with the job, and suggest a prof
                 )
                 ai_reply = response.choices[0].message.content.strip()
 
-                # Append to chat history
                 st.session_state.chat_history.append(("You", question))
                 st.session_state.chat_history.append(("AI", ai_reply))
 
@@ -138,6 +155,7 @@ Evaluate how well the resume and question align with the job, and suggest a prof
 
         except Exception as e:
             st.error(f"⚠️ Unexpected Error: {str(e)}")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Show chat history
 if st.session_state.chat_history:
@@ -145,7 +163,6 @@ if st.session_state.chat_history:
     for speaker, message in st.session_state.chat_history:
         st.markdown(f"**{speaker}:** {message}")
 
-    # Download chat history
     def generate_chat_download():
         lines = [f"{speaker}: {message}" for speaker, message in st.session_state.chat_history]
         return "\n\n".join(lines)
@@ -158,7 +175,6 @@ if st.session_state.chat_history:
         mime="text/plain"
     )
 
-    # Clear button
     if st.button("🗑️ Clear Chat"):
         st.session_state.chat_history = []
         st.experimental_rerun()
