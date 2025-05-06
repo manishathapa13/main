@@ -107,6 +107,42 @@ with job_col2:
     job_text = st.text_area("Or paste the job description here", height=200)
 
 # Interview question with highlight style
+
+# Generate top 10 suggested questions based on resume + job description
+if "suggested_questions" not in st.session_state:
+    st.session_state.suggested_questions = []
+
+resume_final = extract_text(resume_file) if resume_file else resume_text
+job_final = extract_text(job_file) if job_file else job_text
+
+if resume_final and job_final and not st.session_state.suggested_questions:
+    with st.spinner("Analyzing resume and job description for tailored questions..."):
+        try:
+            suggestion_prompt = f"""
+You are an expert interview coach.
+
+Given the resume and job description below, generate a list of the top 10 interview questions a candidate should prepare for. Format clearly.
+
+Resume:
+{resume_final}
+
+Job Description:
+{job_final}
+"""
+            suggestion_response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an expert career advisor."},
+                    {"role": "user", "content": suggestion_prompt}
+                ]
+            )
+            st.session_state.suggested_questions = suggestion_response.choices[0].message.content.strip()
+            st.success("✅ Suggested questions generated!")
+            st.markdown("### 💡 Suggested Interview Questions")
+            st.markdown(st.session_state.suggested_questions)
+        except Exception as e:
+            st.warning(f"⚠️ Could not fetch suggested questions: {str(e)}")
+
 st.markdown("""
     <div style='background-color:#fff8dc;padding:15px;border-radius:10px;border:2px solid #f1c40f;box-shadow: 0 0 10px rgba(241,196,15,0.5);'>
         <strong>🖊️ Enter an interview question (e.g. 'Why should we hire you?')</strong>
