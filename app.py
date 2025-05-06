@@ -45,7 +45,7 @@ with st.sidebar:
     6️⃣ Scroll down to view and download the **conversation history**.
     """)
     st.markdown("---")
-    st.markdown("Powered by OpenAI GPT-4 API + Streamlit")}")
+    st.markdown("Powered by OpenAI GPT-4 API + Streamlit"))
 
 # Title
 st.markdown("<h1>🌟 AI Interview Coach</h1>", unsafe_allow_html=True)
