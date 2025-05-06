@@ -36,34 +36,16 @@ st.markdown("""
 with st.sidebar:
     st.title("🛠️ How to Use")
     st.markdown("""
-    1. Upload or paste your **Resume**  
-    2. Upload or paste the **Job Description**  
-    3. Type an **Interview Question**  
-    4. Click **Generate**
+    ### Step-by-Step Guide
+    1️⃣ Upload or paste your **Resume** in the Resume section.  
+    2️⃣ Upload or paste the **Job Description** in the next section.  
+    3️⃣ View the **top suggested questions** generated based on your inputs.  
+    4️⃣ Type or copy a question into the input box.  
+    5️⃣ Click **Generate Response** to get AI-powered feedback.  
+    6️⃣ Scroll down to view and download the **conversation history**.
     """)
     st.markdown("---")
-    st.markdown("Powered by OpenAI GPT-4 API + Streamlit")
-
-    st.markdown("### 💬 Get Common Interview Questions")
-    if st.button("📋 Show Common Interview Questions"):
-        common_q_prompt = """
-You are an expert career advisor. Provide a list of the top 10 most commonly asked job interview questions that apply to most industries and positions.
-Please format your response clearly.
-"""
-        try:
-            with st.spinner("Fetching top interview questions..."):
-                response_common = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": "You are an expert HR advisor."},
-                        {"role": "user", "content": common_q_prompt}
-                    ]
-                )
-                st.success("✅ Here are some popular questions!")
-                st.subheader("🔝 Top Interview Questions")
-                st.write(response_common.choices[0].message.content.strip())
-        except Exception as e:
-            st.error(f"⚠️ Error fetching common questions: {str(e)}")
+    st.markdown("Powered by OpenAI GPT-4 API + Streamlit")}")
 
 # Title
 st.markdown("<h1>🌟 AI Interview Coach</h1>", unsafe_allow_html=True)
