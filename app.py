@@ -115,7 +115,7 @@ if "suggested_questions" not in st.session_state:
 resume_final = extract_text(resume_file) if resume_file else resume_text
 job_final = extract_text(job_file) if job_file else job_text
 
-if resume_final and job_final and not st.session_state.suggested_questions:
+if resume_final and job_final and not st.session_state.suggested_questions or (resume_final and job_final and st.session_state.suggested_questions):
     with st.spinner("Analyzing resume and job description for tailored questions..."):
         try:
             suggestion_prompt = f"""
@@ -137,9 +137,9 @@ Job Description:
                 ]
             )
             st.session_state.suggested_questions = suggestion_response.choices[0].message.content.strip()
-            st.success("✅ Suggested questions generated!")
-            st.markdown("### 💡 Suggested Interview Questions")
-            st.markdown(st.session_state.suggested_questions)
+            st.success("✅ Suggested questions ready!")
+st.markdown("### 💡 Suggested Interview Questions")
+st.markdown(st.session_state.suggested_questions)
         except Exception as e:
             st.warning(f"⚠️ Could not fetch suggested questions: {str(e)}")
 
@@ -148,7 +148,7 @@ st.markdown("""
         <strong>🖊️ Enter an interview question (e.g. 'Why should we hire you?')</strong>
     </div>
 """, unsafe_allow_html=True)
-question = st.text_input("", key="interview_q")
+question = st.text_area("", height=100, placeholder="Type your interview question here...", key="interview_q")
 
 # Button with highlight style
 if st.button("✨ Generate Response", help="Click to generate AI-powered feedback"):
