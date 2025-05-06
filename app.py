@@ -130,7 +130,13 @@ st.markdown("""
         <strong>🖊️ Enter an interview question (e.g. 'Why should we hire you?')</strong>
     </div>
 """, unsafe_allow_html=True)
-question = st.text_area("", height=100, placeholder="Type your interview question here...", key="interview_q")
+question = st.text_area(
+    label="Interview Question",
+    height=100,
+    placeholder="Type your interview question here...",
+    label_visibility="collapsed",
+    key="interview_q"
+)
 
 # Button with highlight style
 is_ready = resume_final and job_final and question
